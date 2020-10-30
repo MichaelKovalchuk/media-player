@@ -6,6 +6,6 @@ export default async (url, name='download') => {
 	const blobUrl = URL.createObjectURL(blob);
 	const link = document.createElement('a');
 	link.download = name;
-	link.href = blob;
+	link.href = blobUrl;
 	link.click();
 };
