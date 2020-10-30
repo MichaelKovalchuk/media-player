@@ -10,6 +10,7 @@ import './media-player-menu-item.js';
 import './media-player-audio-bars.js';
 import { css, html, LitElement } from 'lit-element/lit-element.js';
 import { classMap } from 'lit-html/directives/class-map';
+import download from './src/download.js';
 import fullscreenApi from './src/fullscreen-api';
 import { ifDefined } from 'lit-html/directives/if-defined';
 import { InternalLocalizeMixin } from './src/mixins/internal-localize-mixin';
@@ -49,6 +50,7 @@ class MediaPlayer extends InternalLocalizeMixin(RtlMixin(LitElement)) {
 
 	static get properties() {
 		return {
+			allowDownload: { type: Boolean, attribute: 'allow-download', reflect: true },
 			autoplay: { type: Boolean },
 			loop: { type: Boolean },
 			poster: { type: String },
@@ -317,17 +319,24 @@ class MediaPlayer extends InternalLocalizeMixin(RtlMixin(LitElement)) {
 				display: none !important;
 			}
 
+			#d2l-labs-media-player-audio-area {
+				align-items: center;
+				display: flex;
+				justify-content: center;
+			}
+
 			#d2l-labs-media-player-audio-bars-container {
 				align-items: center;
 				display: flex;
 				flex-wrap: nowrap;
 				height: 8.5rem;
 				justify-content: center;
-				width: 100%;
+				width: calc(100% - 5.2rem);
 			}
 
 			d2l-labs-media-player-audio-bars {
 				height: 2rem;
+				width: 100%;
 			}
 
 			#d2l-labs-media-player-track-container {
@@ -419,6 +428,8 @@ class MediaPlayer extends InternalLocalizeMixin(RtlMixin(LitElement)) {
 	constructor() {
 		super();
 
+		// this.allowDownload = false;
+		this.allowDownload = true;
 		this.autoplay = false;
 		this.loop = false;
 		this._currentTime = 0;
@@ -472,6 +483,9 @@ class MediaPlayer extends InternalLocalizeMixin(RtlMixin(LitElement)) {
 	}
 
 	render() {
+		const downloadButton = this.allowDownload ? html`
+		` : null;
+
 		const fullscreenIcon = fullscreenApi.isFullscreen ? 'tier1:smallscreen' : 'tier1:fullscreen';
 		const playIcon = this._playing ? 'tier1:pause' : 'tier1:play';
 		const volumeIcon = this._muted ? 'tier1:volume-muted' : 'tier1:volume';
@@ -563,6 +577,8 @@ class MediaPlayer extends InternalLocalizeMixin(RtlMixin(LitElement)) {
 					</d2l-labs-media-player-menu-item>
 
 					${this._getTracksMenuView()}
+
+					${this._getDownloadMenuItemView()}
 
 					<div class="d2l-labs-media-player-menu-end"></div>
 				</d2l-menu>
@@ -887,6 +903,11 @@ class MediaPlayer extends InternalLocalizeMixin(RtlMixin(LitElement)) {
 		if (this._sourceType === SOURCE_TYPES.video) this._onVideoClick();
 	}
 
+	_onDownloadClick() {
+		download(this.src);
+		this._onMenuItemChange();
+	}
+
 	_togglePlay() {
 		if (this._media.paused) {
 			this._media.play();
@@ -1043,12 +1064,14 @@ class MediaPlayer extends InternalLocalizeMixin(RtlMixin(LitElement)) {
 						<source src="${this.src}"></source>
 					</audio>
 
-					<div id="d2l-labs-media-player-audio-bars-container">
-						<button id="d2l-labs-media-player-audio-play-button" title="${playTooltip}" aria-label="${playTooltip}" @click=${this._togglePlay}>
-							<d2l-icon icon="${playIcon}"></d2l-icon>
-						</button>
+					<div id="d2l-labs-media-player-audio-area">
+						<div id="d2l-labs-media-player-audio-bars-container">
+							<button id="d2l-labs-media-player-audio-play-button" title="${playTooltip}" aria-label="${playTooltip}" @click=${this._togglePlay}>
+								<d2l-icon icon="${playIcon}"></d2l-icon>
+							</button>
 
-						<d2l-labs-media-player-audio-bars ?playing="${this._playing}"></d2l-labs-media-player-audio-bars>
+							<d2l-labs-media-player-audio-bars ?playing="${this._playing}"></d2l-labs-media-player-audio-bars>
+						</div>
 					</div>
 				`;
 			default:
@@ -1066,6 +1089,12 @@ class MediaPlayer extends InternalLocalizeMixin(RtlMixin(LitElement)) {
 					`)}
 				</d2l-menu>
 			</d2l-labs-media-player-menu-item>
+		` : null;
+	}
+
+	_getDownloadMenuItemView() {
+		return this.allowDownload ? html`
+			<d2l-labs-media-player-menu-item text="${this.localize('download')}" @click=${this._onDownloadClick}></d2l-labs-media-player-menu-item>
 		` : null;
 	}
 
